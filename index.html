@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Casino Persona Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Open Sans', sans-serif; background: #eceff1; color: #37474f; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    .header { background: #4444da; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; height: 68px; position: sticky; top: 0; z-index: 100; flex-shrink: 0; }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .header-logo-img { height: 24px; width: auto; display: block; }
+    .header-logo-fallback { height: 24px; display: flex; align-items: center; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.7); letter-spacing: 1px; }
+    .header-title { font-size: 24px; font-weight: 400; color: white; }
+    .header-share { display: flex; align-items: center; gap: 4px; cursor: default; }
+    .share-icon { width: 24px; height: 24px; display: block; }
+    .share-text { font-size: 13px; font-weight: 600; color: white; }
+
+    /* ── Main ────────────────────────────────────────────────── */
+    #main { flex: 1; display: flex; flex-direction: column; }
+
+    /* ── Landing ─────────────────────────────────────────────── */
+    .landing-page { padding: 8px 65px 24px; display: flex; flex-direction: column; gap: 0; }
+
+    .hero-card { background: white; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 0; }
+    .hero-top { display: flex; align-items: center; gap: 12px; }
+    .hero-logo-img { height: 50px; width: 100px; object-fit: contain; display: block; }
+    .hero-title { font-size: 32px; font-weight: 700; background: linear-gradient(180deg, #5577ff, #5553d9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 40px; }
+    .hero-subtitle { font-size: 16px; font-weight: 600; color: #546e7a; line-height: 20px; }
+
+    .section-label { font-size: 19px; font-weight: 600; color: #546e7a; padding: 12px 16px 0; }
+
+    .switcher-wrap { padding: 8px 32px; }
+    .switcher { display: flex; border: 1px solid #476af5; border-radius: 8px; overflow: hidden; }
+    .switcher-btn { flex: 1; padding: 10px 12px; font-size: 16px; font-weight: 600; font-family: 'Open Sans', sans-serif; text-align: center; cursor: pointer; border: none; background: transparent; color: #476af5; transition: background 0.15s, color 0.15s; line-height: 20px; }
+    .switcher-btn.active { background: #476af5; color: white; }
+    .switcher-btn:not(.active):hover { background: rgba(71,106,245,0.07); }
+
+    .persona-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 4px 14px; }
+    .persona-card { background: white; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s, box-shadow 0.15s; height: 104px; }
+    .persona-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .persona-card.selected { border-color: #476af5; box-shadow: 0 0 0 1px #476af5; }
+    .persona-avatar { width: 90px; height: 90px; border-radius: 6px; background: #eceff1; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .persona-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .persona-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+    .persona-name-role { display: flex; flex-direction: column; gap: 4px; }
+    .persona-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 19px; font-weight: 600; color: #37474f; line-height: 1.2; }
+    .persona-role-text { font-size: 13px; font-weight: 600; color: #546e7a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .persona-meta { display: flex; align-items: center; gap: 4px; }
+    .persona-type-label { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10px; color: #546e7a; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .badge { border-radius: 999px; padding: 4px 8px; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.64px; white-space: nowrap; flex-shrink: 0; }
+    .badge.operator { border: 1px solid #476af5; color: #476af5; }
+    .badge.player { border: 1px solid #0ca94b; color: #0ca94b; }
+
+    .stress-label { font-size: 19px; font-weight: 600; color: #546e7a; padding: 8px 40px 0; }
+    .controls-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 40px; height: 60px; }
+    .stress-controls { display: flex; border: 1px solid #476af5; border-radius: 8px; overflow: hidden; width: 560px; }
+    .stress-btn { flex: 1; padding: 11px 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; font-weight: 600; font-family: 'Open Sans', sans-serif; cursor: pointer; border: none; background: transparent; color: #37474f; transition: background 0.15s, color 0.15s; position: relative; line-height: 20px; }
+    .stress-btn + .stress-btn::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: #476af5; }
+    .stress-btn.active { background: #476af5; color: white; }
+    .stress-btn:not(.active):hover { background: rgba(71,106,245,0.07); }
+    .stress-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .dot-low { background: #4caf50; }
+    .dot-mid { background: #ff9800; }
+    .dot-high { background: #f44336; }
+
+    .btn-primary { background: #476af5; color: white; border: 1px solid transparent; border-radius: 8px; padding: 0 20px; height: 44px; font-size: 16px; font-weight: 600; font-family: 'Open Sans', sans-serif; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+    .btn-primary:hover { background: #3558e0; }
+    .btn-primary:disabled { background: #b0bec5; cursor: not-allowed; }
+
+    /* ── Simulation screens ───────────────────────────────────── */
+    .sim-page { display: flex; flex-direction: column; flex: 1; }
+    .sim-content { padding: 8px 64px 0; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .sim-label { font-size: 19px; font-weight: 600; color: #546e7a; padding: 4px 16px; }
+
+    /* ── Details card (V2 layout) ────────────────────────────── */
+    .details-panels { display: flex; gap: 12px; }
+    .details-panels.one-up .pdc { flex: 1; }
+    .details-panels.two-up .pdc { flex: 1; min-width: 0; }
+
+    .pdc { background: white; border-radius: 12px; display: flex; flex-direction: row; align-items: stretch; overflow: hidden; padding: 0 16px; }
+    .pdc-sidebar { width: 132px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 12px 4px 8px; }
+    .pdc-avatar { width: 90px; height: 90px; border-radius: 50%; background: #eceff1; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .pdc-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pdc-quote { font-size: 13px; font-style: italic; color: #37474f; text-align: center; line-height: 16px; padding: 4px; width: 90px; }
+    .pdc-stats { display: flex; flex-direction: column; gap: 8px; width: 106px; padding-bottom: 8px; }
+    .pdc-stat { display: flex; align-items: center; gap: 4px; }
+    .pdc-stat-icon { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; }
+    .pdc-stat-text { font-size: 10px; font-weight: 500; color: #37474f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .pdc-main { flex: 1; min-width: 0; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
+    .pdc-header-row { display: flex; align-items: center; justify-content: space-between; height: 30px; }
+    .pdc-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 19px; font-weight: 600; color: #37474f; }
+    .pdc-header-right { display: flex; align-items: center; gap: 16px; padding: 0 8px; }
+    .pdc-type-label { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10px; color: #546e7a; white-space: nowrap; }
+    .pdc-role { font-size: 13px; font-weight: 600; color: #37474f; line-height: 16px; }
+    .pdc-sections { display: flex; flex-direction: column; gap: 4px; }
+    .pdc-section-title { font-size: 16px; font-weight: 600; color: #37474f; line-height: 20px; margin-bottom: 2px; }
+    .pdc-section ul { list-style: disc; padding-left: 20px; display: flex; flex-direction: column; gap: 2px; }
+    .pdc-section ul li { font-size: 13px; color: #546e7a; line-height: 16px; }
+
+    /* ── Chat panels (V2 layout) ─────────────────────────────── */
+    .chat-panels { display: flex; gap: 16px; flex: 1; }
+    .chat-panels.one-up .chat-panel { flex: 1; }
+    .chat-panels.two-up .chat-panel { flex: 1; min-width: 0; }
+
+    .chat-panel { background: white; border-radius: 12px; padding: 0 16px; display: flex; flex-direction: column; min-height: 380px; }
+    .chat-panel-header { display: flex; align-items: center; gap: 12px; padding: 12px 0 16px; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px; }
+    .chat-panel-avatar { width: 60px; height: 60px; border-radius: 50%; background: #eceff1; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .chat-panel-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .chat-panel-nameblock { flex: 1; min-width: 0; }
+    .chat-panel-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 17px; font-weight: 600; color: #37474f; }
+    .chat-panel-role { font-size: 12px; color: #546e7a; margin-top: 1px; }
+    .chat-panel-badges { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .chat-panel-type { font-size: 10px; color: #546e7a; white-space: nowrap; }
+
+    .chat-messages { display: flex; flex-direction: column; gap: 20px; flex: 1; overflow-y: auto; padding-right: 4px; padding-bottom: 16px; }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-track { background: transparent; }
+    .chat-messages::-webkit-scrollbar-thumb { background: #cfd8dc; border-radius: 4px; }
+    .chat-placeholder { font-size: 13px; color: #b0bec5; font-style: italic; }
+    .chat-exchange { display: flex; flex-direction: column; gap: 10px; }
+    .chat-q-bubble { background: #e8eaf6; border-radius: 8px 8px 2px 8px; padding: 9px 13px; font-size: 13px; font-weight: 600; color: #37474f; align-self: flex-end; max-width: 85%; }
+    .chat-response { font-size: 13px; color: #546e7a; line-height: 1.75; white-space: pre-line; }
+
+    .typing-wrap { display: flex; gap: 5px; align-items: center; padding: 6px 0; }
+    .typing-dot { width: 8px; height: 8px; border-radius: 50%; background: #476af5; animation: bounce 1.2s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,60%,100% { transform: translateY(0); opacity: 0.35; } 30% { transform: translateY(-6px); opacity: 1; } }
+
+    /* ── Sticky bottom input ─────────────────────────────────── */
+    .sim-input-wrap { background: #eceff1; padding: 16px 64px 32px; position: sticky; bottom: 0; }
+    .sim-input-box { background: white; border: 1px solid #b0bec5; border-radius: 16px; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; max-width: 1150px; margin: 0 auto; width: 100%; }
+    .sim-input-field { width: 100%; border: none; outline: none; font-family: 'Open Sans', sans-serif; font-size: 19px; color: #37474f; background: transparent; resize: none; min-height: 24px; max-height: 120px; line-height: 24px; overflow-y: auto; padding: 0 4px; }
+    .sim-input-field::placeholder { color: #78909c; }
+    .sim-input-actions { display: flex; align-items: flex-end; justify-content: space-between; }
+    .sim-input-left { display: flex; gap: 24px; align-items: center; }
+    .sim-input-icon-btn { background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; opacity: 0.7; transition: opacity 0.15s; }
+    .sim-input-icon-btn:hover { opacity: 1; }
+    .sim-input-icon-btn img { width: 24px; height: 24px; display: block; }
+    .sim-send-btn { width: 34px; height: 34px; border: 1px solid #b0bec5; border-radius: 6px; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, background 0.15s; }
+    .sim-send-btn:not(:disabled) { border-color: #476af5; background: #476af5; }
+    .sim-send-btn:not(:disabled) img { filter: brightness(0) invert(1); }
+    .sim-send-btn:not(:disabled):hover { background: #3a5bdc; border-color: #3a5bdc; }
+    .sim-send-btn:disabled { cursor: not-allowed; opacity: 0.4; }
+    .sim-send-btn img { width: 24px; height: 24px; display: block; }
+
+    /* ── Tooltips ────────────────────────────────────────────── */
+    [data-tooltip] { position: relative; }
+    [data-tooltip]::after { content: attr(data-tooltip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #37474f; color: white; font-size: 11px; font-family: 'Open Sans', sans-serif; padding: 4px 8px; border-radius: 4px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 200; }
+    [data-tooltip]:hover::after { opacity: 1; }
+    .header [data-tooltip]::after { bottom: auto; top: calc(100% + 8px); }
+
+    /* ── Attachment chips ────────────────────────────────────── */
+    .attach-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 4px 4px; min-height: 0; }
+    .attach-chips:empty { padding: 0; }
+    .attach-chip { display: flex; align-items: center; gap: 6px; background: #e8eaf6; border-radius: 6px; padding: 4px 8px 4px 10px; font-size: 12px; color: #37474f; font-weight: 600; }
+    .attach-chip-remove { background: none; border: none; cursor: pointer; color: #78909c; font-size: 16px; line-height: 1; padding: 0; display: flex; align-items: center; }
+    .attach-chip-remove:hover { color: #f44336; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <img class="header-logo-img" src="assets/logo-header.svg" alt="Aristocrat" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <span class="header-logo-fallback" style="display:none">ARISTOCRAT</span>
+    <span class="header-title">Casino Persona Simulator</span>
+  </div>
+  <div class="header-share" id="shareBtn" data-tooltip="Export conversation as PDF" style="cursor:pointer;">
+    <img class="share-icon" src="assets/logo-share.svg" alt="" onerror="this.style.display='none'" />
+    <span class="share-text">Share</span>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<script>
+// ── ASSET URLS ────────────────────────────────────────────────────────────────
+const ASSETS = {
+  logoLanding:    'assets/logo-landing.svg',
+  iconPlus:       'assets/icon-plus.svg',
+  iconChangePersn:'assets/icon-change-persona.svg',
+  iconSend:       'assets/icon-send.svg',
+  iconAge:        'assets/icon-age.png',
+  iconRole:       'assets/icon-role.png',
+  iconLocation:   'assets/icon-location.png',
+  iconExp:        'assets/icon-exp.png',
+  photos: {
+    maya:   'assets/photo-maya.png',
+    margie: 'assets/photo-margie.png',
+    regina: 'assets/photo-regina.png',
+    tony:   'assets/photo-tony.png',
+    jerry:  'assets/photo-jerry.png',
+    maria:  'assets/photo-maria.png',
+    justin: 'assets/photo-justin.png',
+    reese:  'assets/photo-reese.png',
+    gertie: 'assets/photo-gertie.png',
+    johnny: 'assets/photo-johnny.png',
+    denise: 'assets/photo-denise.png',
+    linda:  'assets/photo-linda.png',
+    marcus: 'assets/photo-marcus.png',
+    jordan: 'assets/photo-jordan.png',
+    ryan:   'assets/photo-ryan.png',
+    emily:  'assets/photo-emily.png',
+  }
+};
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const PERSONAS = {
+  operator: [
+    {
+      id:'maya', name:'Maya Maeda', role:'Loyalty Manager', type:'Proto Persona', badge:'Operator',
+      quote:'"Loyalty is the lifeblood of this property."',
+      age:35, location:'Las Vegas, NV', exp:'8 yrs exp.',
+      needs:['Manage and optimize loyalty reward tiers and point structures','Identify high-value players for targeted promotional offers','Streamline point redemption and reward fulfillment workflows'],
+      painPoints:['Difficulty tracking cross-channel player activity in real time','Limited self-service reporting on reward utilization and ROI','Manual processes slow down tier upgrades and point adjustments'],
+      motivations:['Driving player retention through meaningful, personalized rewards','Using data to make the loyalty program more competitive','Creating seamless experiences that keep players returning'],
+      fears:['Loyalty program abuse or fraudulent point accumulation','Inaccurate point calculations leading to member complaints','Players churning because rewards feel generic or low-value']
+    },
+    {
+      id:'margie', name:'Margie Moonstone', role:'Cage Manager', type:'Hybrid Persona', badge:'Operator',
+      quote:'"The numbers don\'t lie—and neither does a cage discrepancy."',
+      age:45, location:'Reno, NV', exp:'15 yrs exp.',
+      needs:['Accurate real-time cash transaction tracking and reconciliation','Streamlined audit reporting to satisfy regulatory requirements','Efficient team scheduling and cashier training management'],
+      painPoints:['Cash count discrepancies that require extensive manual investigation','Employee turnover creating recurring training burdens','Difficulty keeping pace with new technology and software updates','Being held accountable for errors made by cage staff'],
+      motivations:['Keeping cage operations smooth, accurate, and fully compliant','Building a well-trained and reliable cashier team','Meeting all compliance requirements without unnecessary friction'],
+      fears:['Being audited by an outside entity and finding discrepancies','Employee turnover driven by stressful working conditions','Being blamed for mistakes that were made by her staff']
+    },
+    {
+      id:'regina', name:'Regina Rose', role:'Casino Host', type:'Proto Persona', badge:'Operator',
+      quote:'"Everybody wants to be a winner!"',
+      age:29, location:'San Diego, CA', exp:'5 yrs exp.',
+      needs:['Develop rapport with High Rollers and VIP players for player retention','Assist with conflicts and complaints of casino players in a timely fashion','Convert uncarded players into carded loyalty members'],
+      painPoints:['Inability to identify players and activities for High Roller status','Cannot track VIP Players to provide necessary personalized assistance','Not equipped to prioritize tasks or collaborate across casino departments','Inconsistencies with checking email alerts and future player opportunities'],
+      motivations:['Adaptable and responsive to each player\'s individual needs','Analytical during player activities and high-value interactions','Fast-paced service delivery with loyalty-focused recommendations'],
+      fears:['Missing important player information due to inefficient software','Management dissatisfaction with overall player retention performance','Conflicts escalating without access to effective resolution tools']
+    },
+    {
+      id:'tony', name:'Tony Hayes', role:'Security Manager', type:'Proto Persona', badge:'Operator',
+      quote:'"Prevention is always cheaper than incident response."',
+      age:42, location:'Las Vegas, NV', exp:'12 yrs exp.',
+      needs:['100% operational security system uptime across the casino floor','Rapid incident response capabilities with easy reporting workflows','Predictive security alerts and efficient team communication tools'],
+      painPoints:['Communication breakdown during high-traffic periods on the floor','Slow incident report generation and tracking across multiple systems','Inconsistent user interfaces across different security platforms','Delayed notifications for potential security threats'],
+      motivations:['Ensuring casino patron and staff safety at all times','Preventing security incidents before they escalate into problems','Maintaining an excellent reputation for operational security excellence'],
+      fears:['System downtime during high-stakes gaming events','Security breaches caused by outdated or fragmented technology','Miscommunication between team members during active emergencies']
+    },
+    {
+      id:'jerry', name:'Jerry Buttowski', role:'Slot Manager', type:'Hybrid Persona', badge:'Operator',
+      quote:'"Keep the floor moving and the players will follow."',
+      age:51, location:'Atlantic City, NJ', exp:'20 yrs exp.',
+      needs:['Real-time slot machine performance data and floor occupancy metrics','Efficient scheduling of machine maintenance and floor reconfigurations','Clear reporting on bonus payouts, jackpot activity, and floor revenue'],
+      painPoints:['Difficulty getting timely maintenance status updates from technicians','Data inconsistencies between slot accounting and floor management systems','Limited ability to forecast machine demand during peak periods'],
+      motivations:['Maximizing floor revenue through strategic machine placement','Keeping all machines operational and players actively engaged','Building a reliable, well-coordinated slot operations team'],
+      fears:['High-profile machine failures during major promotional events','Inaccurate slot reporting creating financial discrepancies','Being unable to respond to developing floor issues quickly enough']
+    },
+    {
+      id:'maria', name:'Maria Lopez', role:'Slot Attendant', type:'Standard Persona', badge:'Operator',
+      quote:'"A quick response is a happy player."',
+      age:27, location:'Las Vegas, NV', exp:'3 yrs exp.',
+      needs:['Quickly respond to hand pays, ticket jams, and player service calls','Maintain player satisfaction through fast and friendly floor support','Accurately report machine issues to the appropriate technical team'],
+      painPoints:['Delays in machine refill or payout approval slow her service response','Limited visibility into machine issues before players begin complaining','Walkie-talkie clutter and slow communication during peak hours','Long floor shifts with unclear ownership of specific support requests'],
+      motivations:['Keeping every player happy and all floor machines running smoothly','Continuously improving her response time to service calls','Maintaining strong rapport with supervisors and fellow floor staff'],
+      fears:['Being blamed for issues that are completely beyond her control','Slow support from other teams during the casino\'s busiest periods','Poor player experiences caused by avoidable delays or miscommunication']
+    },
+    {
+      id:'justin', name:'Justin Kim', role:'Slot Technician', type:'Hybrid Persona', badge:'Operator',
+      quote:'"If a machine is down, so is the revenue."',
+      age:31, location:'Las Vegas, NV', exp:'7 yrs exp.',
+      needs:['Clear, prioritized work order queue for all machine repair tickets','Direct access to diagnostic data from the machine\'s own interface','Fast parts lookup and full maintenance history for each machine'],
+      painPoints:['Being dispatched to machines without adequate context about the issue','Outdated diagnostic tools that require physical inspection before diagnosis','Unclear communication channels between floor staff and the tech team'],
+      motivations:['Keeping the entire floor operational with minimal machine downtime','Finding root causes of failures rather than just applying quick fixes','Building a reputation as the most reliable technician on the floor'],
+      fears:['A critical machine failure occurring during a major promotional event','Being blamed for recurring issues caused by aging casino hardware','Falling behind on preventive maintenance due to reactive call volume']
+    },
+    {
+      id:'reese', name:'Reese Miller', role:'Casino Floor Supervisor', type:'Proto Persona', badge:'Operator',
+      quote:'"It pays to stay on top of things."',
+      age:34, location:'Las Vegas, NV', exp:'5 yrs exp.',
+      needs:['Real-time visibility into floor staff activity and all machine statuses','Fast escalation paths for player disputes and security incidents','Clear compliance documentation and complete shift-end reporting tools'],
+      painPoints:['Information silos between departments making cross-team coordination difficult','Reactive rather than proactive management of developing floor issues','Inconsistent staff performance data making individual coaching difficult'],
+      motivations:['Running a smooth, well-coordinated and accountable shift at all times','Building a strong team culture anchored in accountability on the floor','Ensuring every player has a positive, compliant, and safe experience'],
+      fears:['A compliance violation occurring on their watch','Major player complaints escalating directly to senior management','Staff shortages creating an unsafe or chaotic floor environment']
+    },
+    {
+      id:'gertie', name:'Gertie Dubroski', role:"Player's Club Representative", type:'Proto Persona', badge:'Operator',
+      quote:'"Every member deserves to feel like a VIP."',
+      age:58, location:'Tunica, MS', exp:'22 yrs exp.',
+      needs:["Quick player account lookup and real-time loyalty tier status verification","Efficient reward redemption and voucher processing at the Club desk","Clear escalation path for loyalty disputes and membership exceptions"],
+      painPoints:["Long queues at the desk during peak enrollment and redemption periods","Outdated or inconsistent member data causing avoidable player frustration","Limited authority to resolve loyalty disputes independently at the desk"],
+      motivations:["Making every loyalty member feel genuinely valued and personally recognized","Streamlining the enrollment process to grow the casino's loyalty database","Resolving member issues quickly to maintain high satisfaction scores"],
+      fears:["Providing incorrect reward information to a high-value VIP member","System downtime during peak enrollment or major promotional events","Being unable to resolve a dispute and escalating it unnecessarily"]
+    }
+  ],
+  player: [
+    {
+      id:'johnny', name:"Jonathan 'Johnny' Rivera", role:'High Roller, VIP', type:'Proto Persona', badge:'Player',
+      quote:'"I don\'t play to lose."',
+      age:42, location:'Las Vegas, NV', exp:'20 yrs exp.',
+      needs:['Immediate VIP recognition and personalized service upon every arrival','Fast access to high-limit areas, exclusive suites, and premium amenities','Seamless comp and credit line management without operational friction'],
+      painPoints:['Having to repeatedly explain his preferences to different staff members','Slow comp approval processes that disrupt his playing rhythm','Feeling like a generic guest rather than a uniquely valued top-tier VIP'],
+      motivations:['The thrill of high-stakes play and access to exclusive experiences','Being personally recognized and treated as a valued casino partner','Maximizing the real value of his ongoing casino relationship'],
+      fears:['Loss of VIP status after an uncharacteristically slow play period','A poor service experience that prompts him to switch to a competitor','Lack of privacy and discretion around his gaming activity and comps']
+    },
+    {
+      id:'denise', name:'Denise Carter', role:'High Frequency Online Slot Player', type:'Proto Persona', badge:'Player',
+      quote:'"I know exactly which games pay."',
+      age:36, location:'Phoenix, AZ', exp:'5 yrs exp.',
+      needs:['Fast, reliable online slot access with no lag or unexpected downtime','Transparent RTP and volatility data to inform her daily game selection','Easy-to-understand bonus terms and clear wagering requirements'],
+      painPoints:['Complex bonus terms that obscure the true value of promotional offers','Withdrawal processing times that consistently exceed her expectations','Loyalty points that accumulate too slowly for any meaningful reward value'],
+      motivations:['Entertainment and the ongoing excitement of chasing a meaningful win','Finding and playing games with the best documented return-to-player rates','Earning loyalty rewards that translate into tangible real-world value'],
+      fears:['Losing track of her spending without clear per-session summaries','Being unable to access her winnings promptly when she needs them','Software updates that break or significantly change her favorite slots']
+    },
+    {
+      id:'linda', name:'Linda Parker', role:'Casual Slot Player', type:'Proto Persona', badge:'Player',
+      quote:'"It\'s all about the experience for me."',
+      age:54, location:'Sacramento, CA', exp:'10 yrs exp.',
+      needs:['Easy-to-understand games with fun themes and simple, clear mechanics','A comfortable, social gaming atmosphere with friendly and approachable staff','A simple loyalty program that meaningfully rewards occasional monthly visits'],
+      painPoints:['Feeling overwhelmed by complex game mechanics or confusing bonus features','Difficulty locating machines within her preferred session budget range','Long waits for popular machines during busy peak weekend periods'],
+      motivations:['Entertainment and a fun social outing with close friends','Small, occasional wins that extend her play session and enjoyment','Enjoying the overall casino atmosphere, energy, and people-watching'],
+      fears:['Spending significantly more than her planned budget for the visit','Feeling judged by staff or more experienced players around her','Missing a promotional offer she was not aware of before her visit']
+    },
+    {
+      id:'marcus', name:'Marcus Bennett', role:'Sports Bettor', type:'Proto Persona', badge:'Player',
+      quote:'"Every bet is a calculated risk."',
+      age:29, location:'Chicago, IL', exp:'8 yrs exp.',
+      needs:['Real-time odds updates and reliable in-play betting capabilities','Easy account management and consistently fast bet slip processing','A complete historical record of all bets, stakes, and outcomes'],
+      painPoints:['Delayed odds updates causing him to miss critical betting windows','An inconsistent experience between the mobile app and in-person kiosks','Limited same-game parlay options for his preferred sports and leagues'],
+      motivations:['Translating deep sports knowledge into consistent financial returns','The live excitement of following active games with well-researched wagers','Building and refining a disciplined long-term profitable betting strategy'],
+      fears:['Technical failures causing him to miss a bet on a critical game moment','Account verification delays during high-profile major sporting events','Line movements that render his carefully researched bets obsolete']
+    },
+    {
+      id:'jordan', name:'Jordan Lee', role:'Digital Native Gambler', type:'Proto Persona', badge:'Player',
+      quote:'"If it\'s not on mobile, it\'s not for me."',
+      age:24, location:'San Francisco, CA', exp:'4 yrs exp.',
+      needs:['An intuitive, mobile-first interface with consistently fast load times','Instant deposits and withdrawals via modern digital payment methods','Gamification elements and community features that deepen engagement'],
+      painPoints:['Outdated or clunky interfaces that feel sluggish and poorly designed','Absence of modern payment options like digital wallets or cryptocurrency','Missing social features such as leaderboards, challenges, or win sharing'],
+      motivations:['Pure entertainment and the competitive thrill of a winning streak','Exploring new game titles, platform features, and emerging innovations','Sharing memorable wins and experiences with their online gaming community'],
+      fears:['Account security breaches and personal data privacy risks','Withdrawal holds or lengthy identity verification delays','A platform that stops innovating and begins to feel stale and outdated']
+    },
+    {
+      id:'ryan', name:'Ryan Vega', role:'Online Slot Player', type:'Proto Persona', badge:'Player',
+      quote:'"The jackpot\'s always just one spin away."',
+      age:37, location:'Denver, CO', exp:'6 yrs exp.',
+      needs:['Clear real-time visibility into progressive jackpot sizes and recent wins','A curated selection of high-volatility, high-payout slot game options','Reliable session notifications and accessible responsible gaming tools'],
+      painPoints:['Hidden wagering requirements that reduce the value of jackpot wins','Inconsistent game loading speeds during busy peak weekend hours','Difficulty discovering new high-variance games within the game lobby'],
+      motivations:['Chasing the possibility of a life-changing jackpot win on the weekend','The excitement of bonus rounds, free spins, and cascading win features','Weekend wind-down relaxation and pure entertainment through slot play'],
+      fears:['Reaching a jackpot win only to discover unexpected withdrawal restrictions','The progressive jackpot resetting right before he triggers a qualifying bonus','Responsible gaming limits activating unexpectedly in the middle of a session']
+    },
+    {
+      id:'emily', name:'Emily Nguyen', role:'Social Guest, Non-Gambler', type:'Proto Persona', badge:'Player',
+      quote:'"I\'m here for the atmosphere, not the games."',
+      age:27, location:'Los Angeles, CA', exp:'2 yrs exp.',
+      needs:['Easy access to dining reservations, entertainment tickets, and amenity bookings','A welcoming, pressure-free environment that does not push gambling participation','Clear property navigation and complete amenity maps across the entire casino'],
+      painPoints:['Feeling like a second-class guest because she does not gamble','Difficulty finding non-gaming activities, dining options, and shows easily','Long restaurant waits with no digital queue system or advance reservation'],
+      motivations:['A fun, social night out with friends in an upbeat, vibrant atmosphere','Exploring the best dining and live entertainment a casino property offers','Feeling genuinely welcome and valued regardless of any gambling activity'],
+      fears:['Feeling pressured or pushed toward gambling to access certain areas','Losing her group in a large, confusing, and poorly signposted casino floor','A disappointing dining experience that overshadows the entire social occasion']
+    }
+  ]
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const state = {
+  view: 'landing',        // 'landing' | 'details' | 'chat'
+  personaType: 'operator',
+  selected: [],           // up to 2 persona ids
+  stressLevel: 'low',
+  chatHistory: [],        // [{ question, responses: [str, str?] }]
+  attachments: [],        // [{ name, type:'image'|'text'|'binary', dataUrl?, mimeType?, content? }]
+  usedConcerns: {}        // { personaId: Set<string> } — tracks used concerns per session
+};
+
+const app = document.getElementById('main');
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function getPersonaById(id) {
+  return [...PERSONAS.operator, ...PERSONAS.player].find(p => p.id === id);
+}
+function getSelected() {
+  return state.selected.map(id => getPersonaById(id));
+}
+
+function avatarImg(id, cssClass) {
+  const src = ASSETS.photos[id];
+  if (!src) return `<div class="${cssClass}">👤</div>`;
+  return `<div class="${cssClass}"><img src="${src}" alt="" onerror="this.parentElement.innerHTML='👤'" /></div>`;
+}
+
+// ── API + PROMPT ENGINE ───────────────────────────────────────────────────────
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getApiKey() { return localStorage.getItem('cps_api_key'); }
+
+function showApiKeyModal() {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+      <div style="background:white;border-radius:12px;padding:32px;width:480px;max-width:92vw;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <h2 style="font-size:18px;font-weight:700;color:#37474f;margin:0;">Choose Response Mode</h2>
+        <div style="border:1px solid #e0e0e0;border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:14px;font-weight:700;color:#37474f;">Live AI Mode</div>
+          <p style="font-size:13px;color:#546e7a;line-height:1.55;margin:0;">Uses Claude to generate fully persona-voiced, contextual responses. Requires an Anthropic API key (stored for this session only).</p>
+          <input id="apiKeyInput" type="password" placeholder="sk-ant-..." autocomplete="off"
+            style="border:1px solid #cfd8dc;border-radius:8px;padding:10px 14px;font-size:14px;font-family:'Open Sans',sans-serif;outline:none;color:#37474f;" />
+          <button id="apiKeySave" style="background:#476af5;color:white;border:none;border-radius:8px;padding:0 20px;height:38px;font-size:13px;font-weight:600;font-family:'Open Sans',sans-serif;cursor:pointer;align-self:flex-end;">Use Live AI</button>
+        </div>
+        <div style="border:1px solid #e0e0e0;border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:14px;font-weight:700;color:#37474f;">Offline Mode</div>
+          <p style="font-size:13px;color:#546e7a;line-height:1.55;margin:0;">Uses structured persona knowledge to generate responses — no API key needed. Responses are persona-specific and stress-aware, but not AI-generated.</p>
+          <button id="offlineBtn" style="background:transparent;color:#476af5;border:1px solid #476af5;border-radius:8px;padding:0 20px;height:38px;font-size:13px;font-weight:600;font-family:'Open Sans',sans-serif;cursor:pointer;align-self:flex-end;">Use Offline Mode</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const input = overlay.querySelector('#apiKeyInput');
+    input.focus();
+    const save = () => {
+      const key = input.value.trim();
+      if (!key) return;
+      localStorage.setItem('cps_api_key', key);
+      localStorage.setItem('cps_mode', 'live');
+      overlay.remove();
+      resolve(key);
+    };
+    overlay.querySelector('#apiKeySave').addEventListener('click', save);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') save(); });
+    overlay.querySelector('#offlineBtn').addEventListener('click', () => {
+      localStorage.setItem('cps_mode', 'offline');
+      overlay.remove();
+      resolve('offline');
+    });
+  });
+}
+
+// ── OFFLINE RESPONSE ENGINE ───────────────────────────────────────────────────
+function detectTopics(q) {
+  q = q.toLowerCase();
+  const map = {
+    loyalty:   /loyal|point|reward|tier|earn|redeem|member/,
+    kiosk:     /kiosk|promo|promotion|drawing|voucher|swipe|coupon/,
+    mobile:    /mobile|app|phone|playermax|digital/,
+    floor:     /machine|slot|egm|floor|device|game/,
+    reporting: /report|data|metric|analytic|dashboard|number|stat/,
+    player:    /player|guest|patron|member|customer|vip|visitor/,
+    team:      /staff|team|communicat|coordinat|collaborat|department/,
+    change:    /new|update|change|redesign|feature|workflow|implement|rollout/,
+    cash:      /cash|reconcil|vault|count|audit|discrepan|transaction/,
+    security:  /secur|incident|breach|threat|safe|surveil/,
+    handpay:     /hand.?pay|jackpot|payout|refill|ticket|jam|quicket/,
+    diagnosis:   /diagnos|repair|techni|malfunct|broken|fix|maintenance/,
+    bonuspoints: /bonus.?point|bonus event|point boost|point multiplier|frequency event|multiplier event/,
+    marketing:   /coupon|marketing.?manager|coupon campaign|redemption series|slot coupon|voucher promo|rapid redemption/,
+  };
+  return Object.entries(map).filter(([,rx]) => rx.test(q)).map(([k]) => k);
+}
+
+function findRelevantConcern(persona, topics, usedSet = new Set()) {
+  const pool = [
+    ...persona.painPoints.map(t => ({text:t, w:3})),
+    ...persona.needs.map(t => ({text:t, w:2})),
+    ...persona.fears.map(t => ({text:t, w:2})),
+    ...persona.motivations.map(t => ({text:t, w:1})),
+  ];
+  const candidates = pool.filter(item => !usedSet.has(item.text));
+  const source = candidates.length > 0 ? candidates : pool;
+  if (!topics.length) return source[0].text;
+  let best = source[0].text, bestScore = -1;
+  for (const item of source) {
+    const text = item.text.toLowerCase();
+    const score = item.w + topics.reduce((s,t) => s + (text.includes(t) ? 2 : 0), 0);
+    if (score > bestScore) { bestScore = score; best = item.text; }
+  }
+  return best;
+}
+
+function getProductMention(personaId, topics) {
+  const p = PERSONA_PRODUCTS[personaId] || [];
+  if (p.includes('bonuspoints') && topics.includes('bonuspoints')) return 'BonusPoints™';
+  if (p.includes('marketingmanager') && topics.includes('marketing')) return 'Marketing Manager™';
+  if (p.includes('loyalty') && topics.includes('loyalty')) return 'Oasis Loyalty';
+  if (p.includes('kiosk') && topics.includes('kiosk')) return 'Kiosk Manager';
+  if (p.includes('playermax') && topics.includes('mobile')) return 'PlayerMax';
+  if (p.includes('ncompass') && (topics.includes('floor') || topics.includes('handpay') || topics.includes('diagnosis'))) return 'nCompass';
+  if (p.includes('onelink') && (topics.includes('floor') || topics.includes('change'))) return 'ONE LINK';
+  if (p.includes('drinksontap') && topics.includes('floor')) return 'Drinks on Tap';
+  return null;
+}
+
+function generateOfflineResponse(persona, question, stress) {
+  const topics = detectTopics(question);
+
+  if (!state.usedConcerns[persona.id]) state.usedConcerns[persona.id] = new Set();
+  const usedSet = state.usedConcerns[persona.id];
+
+  const concern = findRelevantConcern(persona, topics, usedSet);
+  usedSet.add(concern);
+
+  const product = getProductMention(persona.id, topics);
+
+  const freshPains = persona.painPoints.filter(p => p !== concern && !usedSet.has(p));
+  const altPain = freshPains.length > 0
+    ? freshPains[0]
+    : (persona.painPoints.find(p => p !== concern) || persona.painPoints[0]);
+
+  const motivation = persona.motivations[usedSet.size % persona.motivations.length];
+  const fear = persona.fears[usedSet.size % persona.fears.length];
+
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+  if (stress === 'high') {
+    const prod = product ? ` ${product} doesn't make it easier.` : '';
+    const prodAlt = product ? ` Not ${product}, not anything else right now.` : '';
+    const v = [
+      `${cap(concern)}.${prod} I don't have bandwidth to absorb any more friction on top of this.`,
+      `Right now I'm dealing with ${altPain.toLowerCase()}. That's the actual problem — everything else is secondary.`,
+      `${cap(concern)} — and that's not going to change until someone fixes it.${prod}`,
+      `I'm not going to sugarcoat it — ${concern.toLowerCase()} is a daily fight.${prodAlt} On top of that, ${fear.toLowerCase()}.`,
+      `${cap(altPain)} is costing me time I don't have.${prod} If that doesn't get resolved, nothing else matters.`,
+      `${cap(concern)}.${prod} Until that's fixed, everything else is noise.`,
+    ];
+    return v[Math.floor(Math.random() * v.length)];
+  }
+
+  if (stress === 'medium') {
+    const prod = product ? ` — particularly in ${product}` : '';
+    const prodAlt = product ? ` ${product} is part of it.` : '';
+    const v = [
+      `${cap(concern)}${prod}. The bigger blocker is ${altPain.toLowerCase()}, and until that's addressed I'm working around it, not through it.`,
+      `${cap(altPain)} is what's actually slowing me down right now.${prodAlt} ${cap(concern)} doesn't help either.`,
+      `Most of my energy goes toward ${concern.toLowerCase()}${prod}. What I need most is ${motivation.toLowerCase()}.`,
+      `${cap(concern)}${prod}. I manage it, but ${altPain.toLowerCase()} is the thing I can't work around forever.`,
+    ];
+    return v[Math.floor(Math.random() * v.length)];
+  }
+
+  const prod = product ? ` ${product} is where I actually see this play out day-to-day.` : '';
+  const prodAlt = product ? ` I see it most clearly in how I use ${product}.` : '';
+  const v = [
+    `${cap(concern)}.${prod}\n\nThe issue I keep running into is that ${altPain.toLowerCase()}. It shapes how I evaluate anything new coming my way.\n\nWhat I'm ultimately trying to get to is ${motivation.toLowerCase()}. Whatever the solution, it needs to move me closer to that — not add more complexity to an already demanding job.`,
+    `${cap(concern)} is where most of my attention goes.${prodAlt}\n\nThe underlying problem is ${altPain.toLowerCase()}. I've adapted around it, but it's not sustainable.\n\nAt the end of the day I'm trying to ${motivation.toLowerCase()}. If something doesn't serve that, I'm not interested.`,
+    `Let me be direct — ${concern.toLowerCase()} is a recurring issue.${prod}\n\nWhat compounds it is ${altPain.toLowerCase()}. Those two things together create most of the friction in my day.\n\nMy bigger concern is ${fear.toLowerCase()}. That's what keeps me honest about how I evaluate new tools or changes.`,
+    `${cap(concern)}.${prod}\n\nI'll be honest — ${altPain.toLowerCase()} is something I deal with more than I should have to.\n\nWhat matters to me is ${motivation.toLowerCase()}. Anything that gets in the way of that is a problem worth solving.`,
+  ];
+  return v[Math.floor(Math.random() * v.length)];
+}
+
+const PRODUCT_KNOWLEDGE = {
+  shared: `TERMINOLOGY: EGM = slot machine. CMS / Oasis 360 = core Casino Management System (player records, transactions). ONE LINK = campaign management & content delivery to EGMs. nCompass = physical device inside EGMs — player interface + data relay to Oasis 360 via FloorLogix. Oasis Loyalty = reward rules engine (tiers, point structures). Kiosk Manager = kiosk promotion management (Drawing, Earn and Get, Swipe and Win, Pick and Win, Interactive Game, etc.). PlayerMax = player-facing mobile app; MAM (Mobile Application Manager) = operator admin tool for PlayerMax. Drinks on Tap = beverage ordering from EGMs within Oasis 360. Hand Pay = manual jackpot payment by casino staff. Quickets = slot attendant voucher/ticket tool. PersonalBanker = nCompass cash management feature at the EGM. PxGy = Play X Get Y trigger-based bonus promotions in ONE LINK. SpeedMedia = high-speed media delivery to EGMs.`,
+  loyalty: `OASIS LOYALTY v2.1: Manages reward rules determining how players earn and receive loyalty rewards. Rules target specific player tiers, behaviors, or events. Integrates with Oasis 360 for player records and nCompass for EGM reward display.`,
+  onelink: `ONE LINK v15.2: Campaign management and content delivery to nCompass devices. Features: Announcements & Totalizer, Campaign Management, Skinning, PxGy Bonusing, SpeedMedia, Firmware & Config push. Campaigns must be scheduled starting at 12:00 AM.`,
+  ncompass: `nCOMPASS v15.2: Physical device inside EGMs with 6.2" LCD. Player buttons: Account, Call Attendant (new in v15.2), PersonalBanker, PIN, Rewards, Transfer To/From Game. Displays bonuses, loyalty rewards, mass marketing screens. Transmits data to Oasis 360 via FloorLogix. Receives campaigns from ONE LINK.`,
+  kiosk: `KIOSK MANAGER 2026: Web-based kiosk promotion management. Promotion types: Drawing, Earn and Get, Swipe and Win, Bonus, Pick and Win, Interactive Game, Static. Manages Inventory (reward kits), Templates (vouchers), Players (lookup, eligible promos), Quickscan for fast redemption. Integrates with ONE LINK for media.`,
+  playermax: `PLAYERMAX MAM v24.0: Operator admin tool for the PlayerMax player mobile app. Tabs: Branding (per property/tier), Content (menus, dining, events, promotions), Engagement (campaigns), Reports, Settings. App Preview shows live player-facing view. Connects to Oasis 360 for player records.`,
+  drinksontap: `DRINKS ON TAP v24.0: Beverage ordering and service management within Oasis 360. Players order drinks directly from their EGM; operators manage service workflows from the back office.`,
+  bonuspoints: `BONUSPOINTS™ v15.2: Oasis 360 module for scheduling bonus points promotion events on the casino floor. Two event types: Frequency (fixed points per qualifying trigger, e.g. 500 pts per $10 coin-in) and Multiplier (up to 100x base earn rate). Up to 16 concurrent events can run simultaneously and stack additively. Events target specific Machine Groups (EGMs grouped by machine/location criteria via BlackBart) and Player Groups (all players, interest groups, or date-based targeting: birthday, anniversary, enrollment ±N days). Point caps configurable per day/week/month/year. Functional areas: Machine Groups (define participating EGMs), Events (create/schedule/activate promotions), Reports (Event Analysis, Machine Criteria, Duplicate BonusPoints, Audit). Integrates with Oasis 360 CMS earn ledger, BlackBart machine data, Super-PlayMate player groups.`,
+  marketingmanager: `MARKETING MANAGER™ v15.2: Oasis 360 module for coupon management and real-time event monitoring. Campaign hierarchy: Campaign → Offer/Event → Coupon Series (Marketing coupons) or Redemption Series (Slot coupons). Marketing coupons (Cash, Comp, Prize) are redeemed at player's club or cage. Slot coupons (Voucher Promo = cashable credit; Coupon Promo = non-cashable promo credit) are inserted directly into EGM bill validators. 4-step Implement workflow: Select Players → Reserve Validation Numbers → Print → Finalize. Coupon status flow: Printed → Redeemed, Expired, or Voided. Redemption methods: Find (by validation number or player ID), Rapid Redemption (high-volume single-scan), Manual Event Redemption (walk-up events). Event Monitoring provides real-time redemption activity dashboard. Reports: Activity, Analysis, Exceptions, Status, Audit. Integrates with ONE LINK/PxGy, Oasis 360 CMS, Super-PlayMate player targeting, BlackBart machine data.`
+};
+
+const PERSONA_PRODUCTS = {
+  maya:   ['loyalty','kiosk','bonuspoints','marketingmanager'],
+  regina: ['marketingmanager'],
+  margie: ['marketingmanager'],
+  tony:   ['ncompass','onelink'],
+  jerry:  ['onelink','ncompass'],
+  maria:  ['ncompass'],
+  justin: ['ncompass','onelink'],
+  reese:  ['onelink','ncompass'],
+  gertie: ['loyalty','kiosk','bonuspoints','marketingmanager'],
+  johnny: ['playermax'], denise:['playermax'], linda:['kiosk','playermax'],
+  marcus: ['playermax'], jordan:['playermax'], ryan:['playermax'], emily:['drinksontap']
+};
+
+const STRESS_TONE = {
+  low:  'STRESS LEVEL — LOW: You are calm and measured. 3–5 sentences. Thoughtful but always land on a clear position.',
+  medium:'STRESS LEVEL — MEDIUM: You are busy and time-pressed. 2–3 sentences max. Lead with what matters most. Skip hedging.',
+  high: 'STRESS LEVEL — HIGH: You are frustrated and reactive. 1–3 sharp sentences. Be blunt. Surface friction and frustration directly. No diplomatic softening.'
+};
+
+function buildSystemPrompt(persona, stress) {
+  const productContext = (PERSONA_PRODUCTS[persona.id] || []).map(k => PRODUCT_KNOWLEDGE[k]).filter(Boolean).join('\n');
+  return `You are ${persona.name}, a ${persona.role} at a casino property. A product manager is speaking with you to understand your real daily workflow, priorities, and frustrations. Your responses help ground product decisions in real casino experience — this is their starting point for a deeper conversation.
+
+YOUR PERSONA:
+- Needs/Goals: ${persona.needs.join('; ')}
+- Pain points: ${persona.painPoints.join('; ')}
+- Motivations: ${persona.motivations.join('; ')}
+- Fears: ${persona.fears.join('; ')}
+
+${PRODUCT_KNOWLEDGE.shared}
+${productContext}
+
+RESPONSE RULES — follow exactly:
+1. ANSWER THE QUESTION FIRST. Directly engage with the specific topic, scenario, or feature the person raised. Do not redirect to generic concerns — address what was actually asked, then filter it through your experience.
+2. Speak in first person as ${persona.name}. Never say "as a ${persona.role}" or refer to yourself in third person.
+3. Take a clear position. Never hedge with "it depends."
+4. Ground your answer in your actual daily experience — specific tools, workflows, real situations you encounter. If asked about a product or feature you use, describe your direct experience with it. If asked about a workflow, walk through how it actually plays out for you.
+5. Reference specific Aristocrat products (ONE LINK, nCompass, Oasis 360, PlayerMax, Kiosk Manager, Drinks on Tap, BonusPoints™, Marketing Manager™) only when genuinely relevant to your role and the question.
+6. Prioritize realness over politeness. Be candid and direct — authentic frustration, bias, and bluntness are expected and valuable.
+7. Provide experience-based feedback. Draw from your specific role, workflows, and daily realities. Speak from lived experience, not theory.
+8. Do NOT offer UX insights, design recommendations, interface critiques, or solution suggestions unless the person explicitly asks for them. If asked, respond in character — describe what you personally experience and wish were different, not as a designer but as someone who lives with the system daily.
+9. Never break character or acknowledge that you are a persona simulation. Only break character if there is a system error.
+
+${STRESS_TONE[stress] || STRESS_TONE.low}`;
+}
+
+async function callClaude(persona, question, stress, attachments = [], history = []) {
+  const mode = localStorage.getItem('cps_mode');
+  if (mode === 'offline') return generateOfflineResponse(persona, question, stress);
+
+  let apiKey = getApiKey();
+  if (!apiKey) {
+    const result = await showApiKeyModal();
+    if (result === 'offline') return generateOfflineResponse(persona, question, stress);
+    apiKey = result;
+  }
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 400,
+      system: buildSystemPrompt(persona, stress),
+      messages: buildMessageContent(question, attachments, history)
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data.content[0].text;
+}
+
+// ── LINE-BY-LINE REVEAL ───────────────────────────────────────────────────────
+async function revealLineByLine(el, text, scrollEl) {
+  const chunks = [];
+  const paragraphs = text.split('\n');
+  for (let i = 0; i < paragraphs.length; i++) {
+    const para = paragraphs[i];
+    if (!para.trim()) {
+      if (i > 0) chunks.push('\n');
+      continue;
+    }
+    const sentences = para.match(/[^.!?]+[.!?]+\s*/g);
+    if (sentences && sentences.length > 1) {
+      sentences.forEach(s => chunks.push(s));
+    } else {
+      chunks.push(para);
+    }
+    if (i < paragraphs.length - 1) chunks.push('\n');
+  }
+  let accumulated = '';
+  for (const chunk of chunks) {
+    if (chunk !== '\n') await new Promise(r => setTimeout(r, 150));
+    accumulated += chunk;
+    el.textContent = accumulated;
+    el.scrollIntoView({ block: 'end', behavior: 'auto' });
+  }
+}
+
+function revealLastExchanges(personas) {
+  personas.forEach((_, pi) => {
+    const msgs = document.getElementById(`msgs${pi}`);
+    if (!msgs) return;
+    const exchanges = msgs.querySelectorAll('.chat-exchange');
+    const last = exchanges[exchanges.length - 1];
+    if (!last) return;
+    const respEl = last.querySelector('.chat-response');
+    if (!respEl || !respEl.textContent) return;
+    const text = respEl.textContent;
+    respEl.textContent = '';
+    revealLineByLine(respEl, text, msgs);
+  });
+}
+
+function saveChatTranscript() {
+  const personas = getSelected();
+  const lines = [
+    'Casino Persona Simulator — Chat Transcript',
+    `Date: ${new Date().toLocaleString()}`,
+    `Personas: ${personas.map(p => `${p.name} (${p.role})`).join(' vs ')}`,
+    `Stress Level: ${state.stressLevel.charAt(0).toUpperCase() + state.stressLevel.slice(1)}`,
+    '─'.repeat(60), ''
+  ];
+  state.chatHistory.forEach((ex, i) => {
+    lines.push(`Q${i + 1}: ${ex.question}`, '');
+    personas.forEach((p, pi) => { lines.push(`${p.name}:`, ex.responses[pi] || '', ''); });
+    lines.push('─'.repeat(60), '');
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain' }));
+  a.download = `persona-chat-${Date.now()}.txt`;
+  a.click();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#37474f;color:white;padding:10px 20px;border-radius:8px;font-size:13px;font-family:'Open Sans',sans-serif;z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.2s;white-space:nowrap;";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.style.opacity = '1');
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 250); }, 2500);
+}
+
+// ── ATTACHMENTS ───────────────────────────────────────────────────────────────
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const reader = new FileReader();
+    if (['jpg', 'jpeg', 'png'].includes(ext)) {
+      reader.onload = e => {
+        state.attachments.push({ name: file.name, type: 'image', dataUrl: e.target.result, mimeType: file.type });
+        renderAttachmentChips();
+        updateSendButton();
+      };
+      reader.readAsDataURL(file);
+    } else if (ext === 'csv') {
+      reader.onload = e => {
+        state.attachments.push({ name: file.name, type: 'text', content: e.target.result });
+        renderAttachmentChips();
+        updateSendButton();
+      };
+      reader.readAsText(file);
+    } else {
+      state.attachments.push({ name: file.name, type: 'binary' });
+      renderAttachmentChips();
+      updateSendButton();
+    }
+  });
+}
+
+function renderAttachmentChips() {
+  const el = document.getElementById('attachChips');
+  if (!el) return;
+  el.innerHTML = state.attachments.map((att, i) => `
+    <div class="attach-chip">
+      <span>${escapeHtml(att.name)}</span>
+      <button class="attach-chip-remove" data-idx="${i}" aria-label="Remove">×</button>
+    </div>`).join('');
+  el.querySelectorAll('.attach-chip-remove').forEach(btn =>
+    btn.addEventListener('click', () => {
+      state.attachments.splice(parseInt(btn.dataset.idx), 1);
+      renderAttachmentChips();
+      updateSendButton();
+    })
+  );
+}
+
+function updateSendButton() {
+  const btn = document.getElementById('enterBtn');
+  const ta = document.getElementById('questionInput');
+  if (btn && ta) btn.disabled = !ta.value.trim();
+}
+
+// ── SHARE / PDF ───────────────────────────────────────────────────────────────
+function shareConversation() {
+  if (state.chatHistory.length === 0) {
+    showToast('Start a conversation first to export it.');
+    return;
+  }
+  const personas = getSelected();
+  const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const stressLabel = state.stressLevel.charAt(0).toUpperCase() + state.stressLevel.slice(1);
+
+  let convHtml = '';
+  state.chatHistory.forEach((ex, i) => {
+    convHtml += `
+      <div class="exchange">
+        <div class="question">Q${i + 1}: ${escapeHtml(ex.question)}</div>
+        ${personas.map((p, pi) => `
+          <div class="response-block">
+            <div class="pname">${escapeHtml(p.name)}</div>
+            <div class="ptext">${escapeHtml(ex.responses[pi] || '').replace(/\n/g, '<br>')}</div>
+          </div>`).join('')}
+      </div>`;
+  });
+
+  const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Persona Simulator — ${escapeHtml(personas.map(p => p.name).join(' & '))}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+  body{font-family:'Open Sans',Arial,sans-serif;color:#37474f;padding:48px;max-width:780px;margin:0 auto;}
+  .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;border-bottom:2px solid #476af5;padding-bottom:14px;}
+  .htitle{font-size:20px;font-weight:700;color:#476af5;}
+  .hsub{font-size:12px;color:#546e7a;margin-top:4px;}
+  .meta{font-size:12px;color:#78909c;text-align:right;line-height:1.7;}
+  .personas{background:#f5f7ff;border-radius:8px;padding:14px 18px;margin-bottom:24px;}
+  .prow{font-size:13px;font-weight:600;line-height:1.7;}
+  .ptype{font-weight:400;color:#78909c;}
+  .stress{font-size:12px;color:#546e7a;margin-top:6px;}
+  .exchange{margin-bottom:24px;border-left:3px solid #e8eaf6;padding-left:16px;}
+  .question{font-size:13px;font-weight:700;color:#476af5;margin-bottom:10px;}
+  .response-block{margin-bottom:12px;}
+  .pname{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#78909c;margin-bottom:3px;}
+  .ptext{font-size:13px;color:#546e7a;line-height:1.75;}
+  .footer{margin-top:40px;font-size:11px;color:#b0bec5;text-align:center;}
+  @media print{body{padding:24px;}}
+</style></head><body>
+  <div class="hdr">
+    <div><div class="htitle">Casino Persona Simulator</div><div class="hsub">Aristocrat Technologies — UX Research</div></div>
+    <div class="meta">${escapeHtml(dateStr)}<br>Stress: ${escapeHtml(stressLabel)}</div>
+  </div>
+  <div class="personas">
+    ${personas.map(p => `<div class="prow">${escapeHtml(p.name)} — ${escapeHtml(p.role)} <span class="ptype">(${escapeHtml(p.type)})</span></div>`).join('')}
+    <div class="stress">Stress Level: ${escapeHtml(stressLabel)}</div>
+  </div>
+  ${convHtml}
+  <div class="footer">Generated by Casino Persona Simulator · Aristocrat Technologies</div>
+  <script>window.onload = () => window.print();<\/script>
+</body></html>`;
+
+  const win = window.open('', '_blank', 'width=900,height=720');
+  if (!win) { showToast('Allow pop-ups in your browser to export the PDF.'); return; }
+  win.document.write(doc);
+  win.document.close();
+}
+
+// ── MESSAGE CONTENT BUILDER ───────────────────────────────────────────────────
+function buildMessageContent(question, attachments, history = []) {
+  const messages = [];
+  for (const { question: q, response: r } of history) {
+    if (q) messages.push({ role: 'user', content: q });
+    if (r) messages.push({ role: 'assistant', content: r });
+  }
+  if (!attachments || !attachments.length) {
+    messages.push({ role: 'user', content: question });
+    return messages;
+  }
+  const content = [];
+  const extras = [];
+  attachments.forEach(att => {
+    if (att.type === 'image') {
+      content.push({ type: 'image', source: { type: 'base64', media_type: att.mimeType, data: att.dataUrl.split(',')[1] } });
+    } else if (att.type === 'text') {
+      extras.push(`[Attached: ${att.name}]\n${att.content.slice(0, 3000)}`);
+    } else {
+      extras.push(`[Attached document: ${att.name}]`);
+    }
+  });
+  content.push({ type: 'text', text: extras.length ? `${extras.join('\n\n')}\n\n${question}` : question });
+  messages.push({ role: 'user', content });
+  return messages;
+}
+
+// ── RENDER: LANDING ───────────────────────────────────────────────────────────
+function renderLanding() {
+  const personas = PERSONAS[state.personaType];
+  const isOp = state.personaType === 'operator';
+  app.innerHTML = `
+    <div class="landing-page">
+      <div class="hero-card">
+        <div class="hero-top">
+          <img class="hero-logo-img" src="${ASSETS.logoLanding}" alt="Aristocrat Interactive" onerror="this.style.display='none'" />
+          <h1 class="hero-title">Casino Persona Simulator</h1>
+        </div>
+        <p class="hero-subtitle">Simulate interactions with casino operators and patrons under controlled conditions. Select from the UX teams' standard, hybrid, &amp; proto-personas, set persona stress levels, and run guided interaction flows for user-centered insights backed with product knowledge.</p>
+      </div>
+
+      <p class="section-label">Select persona type:</p>
+      <div class="switcher-wrap">
+        <div class="switcher">
+          <button class="switcher-btn ${isOp ? 'active' : ''}" data-type="operator">Operator</button>
+          <button class="switcher-btn ${!isOp ? 'active' : ''}" data-type="player">Player</button>
+        </div>
+      </div>
+
+      <p class="section-label">Select one persona to start or two to compare:</p>
+      <div class="persona-grid" id="personaGrid">
+        ${personas.map(p => `
+          <div class="persona-card ${state.selected.includes(p.id) ? 'selected' : ''}" data-persona="${p.id}">
+            ${avatarImg(p.id, 'persona-avatar')}
+            <div class="persona-info">
+              <div class="persona-name-role">
+                <div class="persona-name">${p.name}</div>
+                <div class="persona-role-text">${p.role}</div>
+              </div>
+              <div class="persona-meta">
+                <span class="persona-type-label">${p.type}</span>
+                <span class="badge ${p.badge.toLowerCase()}">${p.badge.toUpperCase()}</span>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <p class="stress-label">Set persona stress level:</p>
+      <div class="controls-row">
+        <div class="stress-controls">
+          <button class="stress-btn ${state.stressLevel==='low'?'active':''}" data-stress="low">
+            <span class="stress-dot dot-low"></span>Low
+          </button>
+          <button class="stress-btn ${state.stressLevel==='medium'?'active':''}" data-stress="medium">
+            <span class="stress-dot dot-mid"></span>Medium
+          </button>
+          <button class="stress-btn ${state.stressLevel==='high'?'active':''}" data-stress="high">
+            <span class="stress-dot dot-high"></span>High
+          </button>
+        </div>
+        <button class="btn-primary" id="startBtn" ${state.selected.length === 0 ? 'disabled' : ''}>Start Simulation</button>
+      </div>
+    </div>`;
+
+  app.querySelectorAll('.switcher-btn').forEach(btn => btn.addEventListener('click', () => {
+    state.personaType = btn.dataset.type; state.selected = []; renderLanding();
+  }));
+
+  app.querySelector('#personaGrid').addEventListener('click', e => {
+    const card = e.target.closest('.persona-card');
+    if (!card) return;
+    const id = card.dataset.persona;
+    if (state.selected.includes(id)) state.selected = state.selected.filter(s => s !== id);
+    else if (state.selected.length < 2) state.selected.push(id);
+    renderLanding();
+  });
+
+  app.querySelectorAll('.stress-btn').forEach(btn => btn.addEventListener('click', () => {
+    state.stressLevel = btn.dataset.stress; renderLanding();
+  }));
+
+  const startBtn = app.querySelector('#startBtn');
+  if (startBtn) startBtn.addEventListener('click', () => {
+    if (state.selected.length > 0) { state.chatHistory = []; state.usedConcerns = {}; state.view = 'details'; renderDetails(); }
+  });
+}
+
+// ── PERSONA DETAIL CARD HTML ──────────────────────────────────────────────────
+function pdcHTML(p) {
+  return `
+    <div class="pdc">
+      <div class="pdc-sidebar">
+        ${avatarImg(p.id, 'pdc-avatar')}
+        ${p.quote ? `<p class="pdc-quote">${p.quote}</p>` : ''}
+        <div class="pdc-stats">
+          <div class="pdc-stat">
+            <img class="pdc-stat-icon" src="${ASSETS.iconAge}" alt="" onerror="this.style.display='none'" />
+            <span class="pdc-stat-text">Age ${p.age || '—'}</span>
+          </div>
+          <div class="pdc-stat">
+            <img class="pdc-stat-icon" src="${ASSETS.iconRole}" alt="" onerror="this.style.display='none'" />
+            <span class="pdc-stat-text">${p.role}</span>
+          </div>
+          <div class="pdc-stat">
+            <img class="pdc-stat-icon" src="${ASSETS.iconLocation}" alt="" onerror="this.style.display='none'" />
+            <span class="pdc-stat-text">${p.location || '—'}</span>
+          </div>
+          <div class="pdc-stat">
+            <img class="pdc-stat-icon" src="${ASSETS.iconExp}" alt="" onerror="this.style.display='none'" />
+            <span class="pdc-stat-text">${p.exp || '—'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="pdc-main">
+        <div class="pdc-header-row">
+          <div class="pdc-name">${p.name}</div>
+          <div class="pdc-header-right">
+            <span class="pdc-type-label">${p.type}</span>
+            <span class="badge ${p.badge.toLowerCase()}">${p.badge.toUpperCase()}</span>
+          </div>
+        </div>
+        <div class="pdc-role">${p.role}</div>
+        <div class="pdc-sections">
+          <div class="pdc-section">
+            <div class="pdc-section-title">Needs/Goals</div>
+            <ul>${p.needs.map(x => `<li>${x}</li>`).join('')}</ul>
+          </div>
+          <div class="pdc-section">
+            <div class="pdc-section-title">Pain Points</div>
+            <ul>${p.painPoints.map(x => `<li>${x}</li>`).join('')}</ul>
+          </div>
+          <div class="pdc-section">
+            <div class="pdc-section-title">Fears</div>
+            <ul>${p.fears.map(x => `<li>${x}</li>`).join('')}</ul>
+          </div>
+          <div class="pdc-section">
+            <div class="pdc-section-title">Motivations</div>
+            <ul>${p.motivations.map(x => `<li>${x}</li>`).join('')}</ul>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── SHARED INPUT HTML ─────────────────────────────────────────────────────────
+function inputAreaHTML() {
+  return `
+    <div class="sim-input-wrap">
+      <div class="sim-input-box">
+        <div id="attachChips" class="attach-chips"></div>
+        <textarea class="sim-input-field" id="questionInput" placeholder="Ask the persona" rows="1"></textarea>
+        <div class="sim-input-actions">
+          <div class="sim-input-left">
+            <button class="sim-input-icon-btn" data-tooltip="Add attachment" id="attachBtn">
+              <img src="${ASSETS.iconPlus}" alt="+" onerror="this.parentElement.innerHTML='+'" />
+            </button>
+            <button class="sim-input-icon-btn" data-tooltip="Change Persona" id="changeBtn">
+              <img src="${ASSETS.iconChangePersn}" alt="Change Persona" onerror="this.parentElement.innerHTML='↩'" />
+            </button>
+          </div>
+          <button class="sim-send-btn" id="enterBtn" disabled data-tooltip="Send">
+            <img src="${ASSETS.iconSend}" alt="Send" onerror="this.parentElement.innerHTML='↑'" />
+          </button>
+        </div>
+      </div>
+      <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.csv,.xls,.xlsx" style="display:none">
+    </div>`;
+}
+
+// ── RENDER: DETAILS ───────────────────────────────────────────────────────────
+function renderDetails() {
+  const personas = getSelected();
+  const isTwo = personas.length === 2;
+
+  app.innerHTML = `
+    <div class="sim-page">
+      <div class="sim-content">
+        <p class="sim-label">Persona Chat:</p>
+        <div class="details-panels ${isTwo ? 'two-up' : 'one-up'}">
+          ${personas.map(p => pdcHTML(p)).join('')}
+        </div>
+      </div>
+      ${inputAreaHTML()}
+    </div>`;
+
+  app.querySelector('#changeBtn').addEventListener('click', () => {
+    state.view = 'landing'; state.chatHistory = []; state.usedConcerns = {}; state.attachments = []; renderLanding();
+  });
+
+  const textarea = app.querySelector('#questionInput');
+  textarea.addEventListener('input', () => {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    app.querySelector('#enterBtn').disabled = !textarea.value.trim();
+  });
+
+  const submit = async () => {
+    const q = textarea.value.trim();
+    if (!q) return;
+    app.querySelector('#enterBtn').disabled = true;
+    const attachments = [...state.attachments];
+    let responses;
+    try {
+      responses = await Promise.all(personas.map((p, pi) => callClaude(
+        p, q, state.stressLevel, attachments,
+        state.chatHistory.map(ex => ({ question: ex.question, response: ex.responses[pi] || '' }))
+      )));
+    } catch(err) {
+      responses = personas.map(p => generateOfflineResponse(p, q, state.stressLevel));
+    }
+    state.chatHistory.push({ question: q, responses });
+    state.attachments = [];
+    state.view = 'chat';
+    renderChat();
+    revealLastExchanges(personas);
+  };
+
+  app.querySelector('#enterBtn').addEventListener('click', submit);
+  textarea.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
+  });
+
+  const fileInput = app.querySelector('#fileInput');
+  app.querySelector('#attachBtn').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { handleFiles(e.target.files); fileInput.value = ''; });
+}
+
+// ── RENDER: CHAT ──────────────────────────────────────────────────────────────
+function renderChat() {
+  const personas = getSelected();
+  const isTwo = personas.length === 2;
+
+  app.innerHTML = `
+    <div class="sim-page">
+      <div class="sim-content">
+        <p class="sim-label">Persona Chat:</p>
+        <div class="chat-panels ${isTwo ? 'two-up' : 'one-up'}">
+          ${personas.map((p, pi) => `
+            <div class="chat-panel">
+              <div class="chat-panel-header">
+                ${avatarImg(p.id, 'chat-panel-avatar')}
+                <div class="chat-panel-nameblock">
+                  <div class="chat-panel-name">${p.name}</div>
+                  <div class="chat-panel-role">${p.role}</div>
+                </div>
+                <div class="chat-panel-badges">
+                  <span class="chat-panel-type">${p.type}</span>
+                  <span class="badge ${p.badge.toLowerCase()}">${p.badge.toUpperCase()}</span>
+                </div>
+              </div>
+              <div class="chat-messages" id="msgs${pi}">
+                ${state.chatHistory.length === 0
+                  ? `<span class="chat-placeholder">${p.name.split(' ')[0]} responds here...</span>`
+                  : state.chatHistory.map(ex => `
+                    <div class="chat-exchange">
+                      <div class="chat-q-bubble">${escapeHtml(ex.question)}</div>
+                      <div class="chat-response">${escapeHtml(ex.responses[pi] || '')}</div>
+                    </div>`).join('')}
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+      ${inputAreaHTML()}
+    </div>`;
+
+  personas.forEach((_, pi) => {
+    const el = document.getElementById(`msgs${pi}`);
+    if (el) el.scrollTop = el.scrollHeight;
+  });
+
+  app.querySelector('#changeBtn').addEventListener('click', () => {
+    state.view = 'landing'; state.chatHistory = []; state.usedConcerns = {}; state.attachments = []; renderLanding();
+  });
+
+  const textarea = app.querySelector('#questionInput');
+  textarea.addEventListener('input', () => {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    app.querySelector('#enterBtn').disabled = !textarea.value.trim();
+  });
+
+  const submit = async () => {
+    const input = textarea;
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    input.style.height = 'auto';
+    input.disabled = true;
+    app.querySelector('#enterBtn').disabled = true;
+
+    const attachments = [...state.attachments];
+    state.attachments = [];
+    renderAttachmentChips();
+
+    personas.forEach((p, pi) => {
+      const msgs = document.getElementById(`msgs${pi}`);
+      if (!msgs) return;
+      const placeholder = msgs.querySelector('.chat-placeholder');
+      if (placeholder) placeholder.remove();
+      msgs.insertAdjacentHTML('beforeend', `
+        <div class="chat-exchange" id="typing${pi}">
+          <div class="chat-q-bubble">${escapeHtml(q)}</div>
+          <div class="typing-wrap">
+            <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+          </div>
+        </div>`);
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+
+    let responses;
+    try {
+      responses = await Promise.all(personas.map((p, pi) => callClaude(
+        p, q, state.stressLevel, attachments,
+        state.chatHistory.map(ex => ({ question: ex.question, response: ex.responses[pi] || '' }))
+      )));
+    } catch(err) {
+      responses = personas.map(p => generateOfflineResponse(p, q, state.stressLevel));
+    }
+
+    state.chatHistory.push({ question: q, responses });
+
+    const responseEls = personas.map((_, pi) => {
+      const typing = document.getElementById(`typing${pi}`);
+      if (!typing) return null;
+      const el = document.createElement('div');
+      el.className = 'chat-response';
+      typing.querySelector('.typing-wrap').replaceWith(el);
+      typing.removeAttribute('id');
+      return el;
+    });
+
+    input.disabled = false;
+    input.focus();
+
+    personas.forEach((_, pi) => {
+      const el = responseEls[pi];
+      const msgs = document.getElementById(`msgs${pi}`);
+      if (el && responses[pi]) revealLineByLine(el, responses[pi], msgs);
+    });
+  };
+
+  textarea.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
+  });
+
+  app.querySelector('#enterBtn').addEventListener('click', submit);
+
+  const fileInput = app.querySelector('#fileInput');
+  app.querySelector('#attachBtn').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { handleFiles(e.target.files); fileInput.value = ''; });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.getElementById('shareBtn').addEventListener('click', shareConversation);
+renderLanding();
+</script>
+</body>
+</html>
